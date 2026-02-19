@@ -359,7 +359,7 @@ $responseJson = json_encode([
         .status-5xx { background: var(--status-5xx-bg); color: var(--status-5xx-fg); }
         .status-err { background: var(--status-5xx-bg); color: var(--status-5xx-fg); }
 
-        pre.response-body {
+        .response-body {
             background: var(--bg-input);
             border: 1px solid var(--border);
             border-radius: 6px;
@@ -417,6 +417,72 @@ $responseJson = json_encode([
         .json-number { color: var(--json-number); }
         .json-boolean { color: var(--json-boolean); }
         .json-null { color: var(--json-null); font-style: italic; }
+
+        /* Collapsible JSON tree */
+        .json-tree {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: .8rem;
+            line-height: 1.6;
+        }
+        .json-tree ul {
+            list-style: none;
+            padding-left: 1.4em;
+            margin: 0;
+        }
+        .json-tree > ul { padding-left: 0; }
+        .json-tree li { position: relative; }
+        .json-collapsible {
+            cursor: pointer;
+            user-select: none;
+            display: inline;
+        }
+        .json-collapsible > .json-toggle {
+            display: inline-block;
+            width: 1em;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: .7rem;
+            transition: transform .15s;
+            cursor: pointer;
+        }
+        .json-collapsible > .json-toggle::before { content: '▶'; }
+        .json-collapsible.open > .json-toggle::before { content: '▼'; }
+        .json-collapsible > .json-bracket { color: var(--text-secondary); }
+        .json-collapsible > .json-preview {
+            color: var(--text-secondary);
+            font-size: .75rem;
+            font-style: italic;
+        }
+        .json-collapsible > .json-children { display: none; }
+        .json-collapsible.open > .json-children { display: block; }
+        .json-collapsible > .json-ellipsis { display: inline; color: var(--text-secondary); }
+        .json-collapsible.open > .json-ellipsis { display: none; }
+        .json-collapsible > .json-bracket-close { display: none; color: var(--text-secondary); }
+        .json-collapsible.open > .json-bracket-close { display: inline; }
+        .json-comma { color: var(--text-secondary); }
+        .json-colon { color: var(--text-secondary); }
+
+        .json-tree .json-line:hover { background: var(--accent-shadow); border-radius: 3px; }
+
+        /* Collapse / Expand All buttons */
+        .json-fold-btns {
+            display: none;
+            gap: 0;
+        }
+        .json-fold-btns.visible { display: inline-flex; }
+        .json-fold-btns button {
+            background: var(--bg-btn-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: .2rem .55rem;
+            cursor: pointer;
+            font-size: .68rem;
+            font-weight: 600;
+            transition: all .15s;
+        }
+        .json-fold-btns button:first-child { border-radius: 5px 0 0 5px; }
+        .json-fold-btns button:last-child { border-radius: 0 5px 5px 0; border-left: 0; }
+        .json-fold-btns button:hover { border-color: var(--accent); color: var(--accent); }
 
         /* Fullscreen button */
         .btn-fullscreen {
@@ -497,6 +563,7 @@ $responseJson = json_encode([
             overflow: visible;
             color: var(--text-primary);
         }
+        .fullscreen-body .json-tree { font-size: .85rem; }
         .fullscreen-body iframe {
             width: 100%;
             height: 100%;
@@ -523,6 +590,10 @@ $responseJson = json_encode([
     <div class="fullscreen-toolbar">
         <h3>Response <span class="status-badge" id="fsStatusBadge"></span></h3>
         <div class="fullscreen-actions">
+            <div class="json-fold-btns" id="fsFoldBtns">
+                <button type="button" onclick="collapseAll(document.getElementById('fsTree'))" title="Collapse All">⊟ Collapse</button>
+                <button type="button" onclick="expandAll(document.getElementById('fsTree'))" title="Expand All">⊞ Expand</button>
+            </div>
             <div class="response-toggle" id="fsToggle" style="display:none;">
                 <button type="button" class="active" data-fs-view="formatted">Formatted</button>
                 <button type="button" data-fs-view="html">HTML Preview</button>
@@ -532,6 +603,7 @@ $responseJson = json_encode([
     </div>
     <div class="fullscreen-body" id="fsBody">
         <pre id="fsPre"></pre>
+        <div id="fsTree" style="display:none;"></div>
         <iframe id="fsIframe" style="display:none;" sandbox="allow-same-origin"></iframe>
     </div>
 </div>
@@ -640,7 +712,11 @@ $responseJson = json_encode([
                 <hr class="divider" style="margin: 1rem 0;">
                 <div class="response-header">
                     <h3>Response</h3>
-                    <div style="display:flex;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:.4rem;">
+                        <div class="json-fold-btns" data-fold-btns>
+                            <button type="button" onclick="collapseAll(this.closest('[data-response]'))" title="Collapse All">⊟ Collapse</button>
+                            <button type="button" onclick="expandAll(this.closest('[data-response]'))" title="Expand All">⊞ Expand</button>
+                        </div>
                         <span class="status-badge" data-status-badge></span>
                         <button type="button" class="btn-fullscreen" data-btn-fullscreen title="Fullscreen">⛶</button>
                     </div>
@@ -649,7 +725,7 @@ $responseJson = json_encode([
                     <button type="button" class="active" data-view="formatted">Formatted</button>
                     <button type="button" data-view="html">HTML Preview</button>
                 </div>
-                <pre class="response-body" data-response-body></pre>
+                <div class="response-body" data-response-body></div>
                 <iframe class="response-iframe" data-response-iframe style="display:none;" sandbox="allow-same-origin"></iframe>
             </div>
         `;
@@ -739,7 +815,7 @@ $responseJson = json_encode([
         } catch (e) { addForm(); }
     }
 
-    // JSON syntax highlighting
+    // JSON syntax highlighting (flat string — kept for non-tree fallbacks)
     function syntaxHighlight(json) {
         if (typeof json !== 'string') json = JSON.stringify(json, null, 2);
         json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -757,6 +833,160 @@ $responseJson = json_encode([
             });
     }
 
+    // ---- Collapsible JSON Tree Builder ----
+    function buildJsonTree(data, startOpen) {
+        if (startOpen === undefined) startOpen = true;
+        const root = document.createElement('div');
+        root.className = 'json-tree';
+        const ul = document.createElement('ul');
+        renderValue(ul, data, startOpen, 0, false);
+        root.appendChild(ul);
+        return root;
+    }
+
+    function renderValue(parentUl, value, startOpen, depth, addComma) {
+        if (value === null) {
+            appendPrimitive(parentUl, '<span class="json-null">null</span>', addComma);
+        } else if (typeof value === 'boolean') {
+            appendPrimitive(parentUl, '<span class="json-boolean">' + value + '</span>', addComma);
+        } else if (typeof value === 'number') {
+            appendPrimitive(parentUl, '<span class="json-number">' + value + '</span>', addComma);
+        } else if (typeof value === 'string') {
+            const escaped = escapeHtml(value);
+            appendPrimitive(parentUl, '<span class="json-string">"' + escaped + '"</span>', addComma);
+        } else if (Array.isArray(value)) {
+            renderCollapsible(parentUl, null, value, '[', ']', startOpen, depth, addComma);
+        } else if (typeof value === 'object') {
+            renderCollapsible(parentUl, null, value, '{', '}', startOpen, depth, addComma);
+        }
+    }
+
+    function appendPrimitive(parentUl, html, addComma) {
+        const li = document.createElement('li');
+        li.innerHTML = html + (addComma ? '<span class="json-comma">,</span>' : '');
+        parentUl.appendChild(li);
+    }
+
+    function renderCollapsible(parentUl, key, value, openBracket, closeBracket, startOpen, depth, addComma) {
+        const isArray = Array.isArray(value);
+        const entries = isArray ? value : Object.keys(value);
+        const count = entries.length;
+
+        const li = document.createElement('li');
+        const wrapper = document.createElement('span');
+        wrapper.className = 'json-collapsible' + (startOpen && depth < 3 ? ' open' : '');
+
+        // Toggle arrow
+        const toggle = document.createElement('span');
+        toggle.className = 'json-toggle';
+        wrapper.appendChild(toggle);
+
+        // Key label (if inside an object)
+        if (key !== null) {
+            const keySpan = document.createElement('span');
+            keySpan.innerHTML = '<span class="json-key">"' + escapeHtml(key) + '"</span><span class="json-colon">: </span>';
+            wrapper.appendChild(keySpan);
+        }
+
+        // Opening bracket
+        const ob = document.createElement('span');
+        ob.className = 'json-bracket';
+        ob.textContent = openBracket;
+        wrapper.appendChild(ob);
+
+        // Ellipsis (shown when collapsed)
+        const ellipsis = document.createElement('span');
+        ellipsis.className = 'json-ellipsis';
+        ellipsis.innerHTML = ' <span class="json-preview">' + count + (count === 1 ? ' item' : ' items') + '</span> ';
+        wrapper.appendChild(ellipsis);
+
+        // Children UL
+        const childUl = document.createElement('ul');
+        childUl.className = 'json-children';
+
+        if (isArray) {
+            value.forEach((item, i) => {
+                const childLi = document.createElement('li');
+                const childInner = document.createElement('ul');
+                childInner.style.paddingLeft = '0';
+                renderValue(childInner, item, startOpen, depth + 1, i < count - 1);
+                // unwrap the inner ul — just take its children
+                while (childInner.firstChild) childLi.appendChild(childInner.firstChild.firstChild || childInner.firstChild);
+                childUl.appendChild(childLi);
+            });
+        } else {
+            const keys = Object.keys(value);
+            keys.forEach((k, i) => {
+                const childLi = document.createElement('li');
+                const v = value[k];
+                const hasComma = i < keys.length - 1;
+
+                if (v !== null && typeof v === 'object') {
+                    const isArr = Array.isArray(v);
+                    renderCollapsible(childUl, k, v, isArr ? '[' : '{', isArr ? ']' : '}', startOpen, depth + 1, hasComma);
+                    return;
+                }
+                // Primitive with key
+                let primHtml = '<span class="json-key">"' + escapeHtml(k) + '"</span><span class="json-colon">: </span>';
+                if (v === null) primHtml += '<span class="json-null">null</span>';
+                else if (typeof v === 'boolean') primHtml += '<span class="json-boolean">' + v + '</span>';
+                else if (typeof v === 'number') primHtml += '<span class="json-number">' + v + '</span>';
+                else primHtml += '<span class="json-string">"' + escapeHtml(String(v)) + '"</span>';
+                if (hasComma) primHtml += '<span class="json-comma">,</span>';
+                childLi.innerHTML = primHtml;
+                childUl.appendChild(childLi);
+            });
+        }
+
+        wrapper.appendChild(childUl);
+
+        // Closing bracket
+        const cb = document.createElement('span');
+        cb.className = 'json-bracket-close';
+        cb.textContent = closeBracket;
+        wrapper.appendChild(cb);
+
+        // Comma after closing bracket
+        if (addComma) {
+            const comma = document.createElement('span');
+            comma.className = 'json-comma';
+            comma.textContent = ',';
+            wrapper.appendChild(comma);
+        }
+
+        // Also show bracket-close inline when collapsed (after ellipsis)
+        const cbInline = document.createElement('span');
+        cbInline.className = 'json-bracket';
+        cbInline.style.display = 'none';
+        wrapper.appendChild(cbInline);
+
+        // Click to toggle
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            wrapper.classList.toggle('open');
+        });
+
+        li.appendChild(wrapper);
+        parentUl.appendChild(li);
+    }
+
+    // Render a collapsible tree into a container element
+    function renderJsonInto(container, jsonData, startOpen) {
+        container.innerHTML = '';
+        const tree = buildJsonTree(jsonData, startOpen !== false);
+        container.appendChild(tree);
+    }
+
+    // Collapse / Expand all nodes within a container
+    function collapseAll(container) {
+        if (!container) return;
+        container.querySelectorAll('.json-collapsible.open').forEach(el => el.classList.remove('open'));
+    }
+    function expandAll(container) {
+        if (!container) return;
+        container.querySelectorAll('.json-collapsible:not(.open)').forEach(el => el.classList.add('open'));
+    }
+
     // Fullscreen state
     let fsData = { rawContent: '', isJson: false, jsonBody: null, statusCode: null, error: null, hasHtml: false };
 
@@ -764,14 +994,20 @@ $responseJson = json_encode([
         const overlay = document.getElementById('fullscreenOverlay');
         const badge = document.getElementById('fsStatusBadge');
         const pre = document.getElementById('fsPre');
+        const tree = document.getElementById('fsTree');
         const iframe = document.getElementById('fsIframe');
         const toggle = document.getElementById('fsToggle');
+        const fsFold = document.getElementById('fsFoldBtns');
+
+        // Show fold buttons only for JSON responses
+        fsFold.classList.toggle('visible', fsData.isJson && !fsData.error);
 
         if (fsData.error) {
             badge.className = 'status-badge status-err';
             badge.textContent = 'ERROR';
             pre.textContent = fsData.error;
             pre.style.display = 'block';
+            tree.style.display = 'none';
             iframe.style.display = 'none';
             toggle.style.display = 'none';
         } else {
@@ -779,20 +1015,24 @@ $responseJson = json_encode([
             badge.textContent = fsData.statusCode;
 
             if (fsData.isJson) {
-                pre.innerHTML = syntaxHighlight(JSON.stringify(fsData.jsonBody, null, 2));
+                pre.style.display = 'none';
+                tree.style.display = 'block';
+                renderJsonInto(tree, fsData.jsonBody, true);
             } else {
                 pre.textContent = fsData.rawContent;
+                pre.style.display = 'block';
+                tree.style.display = 'none';
             }
 
             if (fsData.hasHtml) {
                 toggle.style.display = 'flex';
                 if (!fsData.isJson) {
                     pre.style.display = 'none';
+                    tree.style.display = 'none';
                     iframe.style.display = 'block';
                     toggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     toggle.querySelector('[data-fs-view="html"]').classList.add('active');
                 } else {
-                    pre.style.display = 'block';
                     iframe.style.display = 'none';
                     toggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     toggle.querySelector('[data-fs-view="formatted"]').classList.add('active');
@@ -806,16 +1046,22 @@ $responseJson = json_encode([
                         btn.classList.add('active');
                         if (btn.dataset.fsView === 'html') {
                             pre.style.display = 'none';
+                            tree.style.display = 'none';
                             iframe.style.display = 'block';
                         } else {
-                            pre.style.display = 'block';
                             iframe.style.display = 'none';
+                            if (fsData.isJson) {
+                                tree.style.display = 'block';
+                                pre.style.display = 'none';
+                            } else {
+                                pre.style.display = 'block';
+                                tree.style.display = 'none';
+                            }
                         }
                     };
                 });
             } else {
                 toggle.style.display = 'none';
-                pre.style.display = 'block';
                 iframe.style.display = 'none';
             }
         }
@@ -845,6 +1091,7 @@ $responseJson = json_encode([
         const iframe = card.querySelector('[data-response-iframe]');
         const toggle = card.querySelector('[data-response-toggle]');
         const btnFs = card.querySelector('[data-btn-fullscreen]');
+        const foldBtns = card.querySelector('[data-fold-btns]');
 
         respSection.classList.add('visible');
         card.classList.add('highlight');
@@ -852,6 +1099,9 @@ $responseJson = json_encode([
         const isJson = serverResponse.body !== null;
         const rawContent = serverResponse.rawContent || '';
         const looksLikeHtml = rawContent.trim().startsWith('<') || rawContent.includes('<!DOCTYPE') || rawContent.includes('<html');
+
+        // Show fold buttons only for JSON
+        if (foldBtns) foldBtns.classList.toggle('visible', isJson);
 
         // Store for fullscreen
         fsData = {
@@ -872,7 +1122,7 @@ $responseJson = json_encode([
             badge.textContent = serverResponse.status;
 
             if (isJson) {
-                body.innerHTML = syntaxHighlight(JSON.stringify(serverResponse.body, null, 2));
+                renderJsonInto(body, serverResponse.body, true);
             } else {
                 body.textContent = rawContent;
             }
