@@ -63,13 +63,74 @@ $responseJson = json_encode([
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Internal API Tester</title>
     <style>
+        :root {
+            --bg-body: #0f1117;
+            --bg-card: #161b22;
+            --bg-input: #0d1117;
+            --bg-btn-secondary: #21262d;
+            --border: #30363d;
+            --border-divider: #21262d;
+            --text-primary: #e1e4e8;
+            --text-secondary: #8b949e;
+            --accent: #58a6ff;
+            --accent-shadow: rgba(88,166,255,.15);
+            --green: #238636;
+            --green-hover: #2ea043;
+            --danger: #da3633;
+            --danger-hover: #f85149;
+            --json-key: #79c0ff;
+            --json-string: #a5d6ff;
+            --json-number: #f0883e;
+            --json-boolean: #ff7b72;
+            --json-null: #8b949e;
+            --status-2xx-bg: rgba(35,134,54,.25);
+            --status-2xx-fg: #3fb950;
+            --status-3xx-bg: rgba(88,166,255,.2);
+            --status-3xx-fg: #58a6ff;
+            --status-4xx-bg: rgba(218,54,51,.2);
+            --status-4xx-fg: #f85149;
+            --status-5xx-bg: rgba(218,54,51,.35);
+            --status-5xx-fg: #ff7b72;
+            --fs-toolbar-bg: #161b22;
+        }
+        [data-theme="light"] {
+            --bg-body: #f6f8fa;
+            --bg-card: #ffffff;
+            --bg-input: #f0f2f5;
+            --bg-btn-secondary: #e8eaed;
+            --border: #d0d7de;
+            --border-divider: #d8dee4;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --accent: #0969da;
+            --accent-shadow: rgba(9,105,218,.15);
+            --green: #1a7f37;
+            --green-hover: #218b3b;
+            --danger: #cf222e;
+            --danger-hover: #e5534b;
+            --json-key: #0550ae;
+            --json-string: #0a3069;
+            --json-number: #953800;
+            --json-boolean: #cf222e;
+            --json-null: #656d76;
+            --status-2xx-bg: rgba(26,127,55,.12);
+            --status-2xx-fg: #1a7f37;
+            --status-3xx-bg: rgba(9,105,218,.12);
+            --status-3xx-fg: #0969da;
+            --status-4xx-bg: rgba(207,34,46,.1);
+            --status-4xx-fg: #cf222e;
+            --status-5xx-bg: rgba(207,34,46,.18);
+            --status-5xx-fg: #a40e26;
+            --fs-toolbar-bg: #ffffff;
+        }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0f1117;
-            color: #e1e4e8;
+            background: var(--bg-body);
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 2rem;
+            transition: background .2s, color .2s;
         }
         .container { max-width: 960px; margin: 0 auto; }
         .top-bar {
@@ -77,25 +138,28 @@ $responseJson = json_encode([
             align-items: center;
             justify-content: space-between;
             margin-bottom: 1.5rem;
+            gap: .75rem;
         }
+        .top-bar-right { display: flex; align-items: center; gap: .5rem; }
         h1 {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #58a6ff;
+            color: var(--accent);
             display: flex;
             align-items: center;
             gap: .5rem;
         }
         h1 span { font-size: 1.2rem; }
         .card {
-            background: #161b22;
-            border: 1px solid #30363d;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
             position: relative;
+            transition: background .2s, border-color .2s;
         }
-        .card.highlight { border-color: #58a6ff; }
+        .card.highlight { border-color: var(--accent); }
         .card-header {
             display: flex;
             align-items: center;
@@ -105,7 +169,7 @@ $responseJson = json_encode([
         .card-title {
             font-size: .95rem;
             font-weight: 600;
-            color: #8b949e;
+            color: var(--text-secondary);
         }
         .row { display: flex; gap: 1rem; margin-bottom: 1rem; }
         .row > * { flex: 1; }
@@ -115,24 +179,24 @@ $responseJson = json_encode([
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: .05em;
-            color: #8b949e;
+            color: var(--text-secondary);
             margin-bottom: .35rem;
         }
         input, select, textarea {
             width: 100%;
             padding: .6rem .75rem;
-            background: #0d1117;
-            border: 1px solid #30363d;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
             border-radius: 6px;
-            color: #e1e4e8;
+            color: var(--text-primary);
             font-size: .95rem;
             font-family: 'SF Mono', 'Fira Code', monospace;
-            transition: border-color .15s;
+            transition: border-color .15s, background .2s, color .2s;
         }
         input:focus, select:focus, textarea:focus {
             outline: none;
-            border-color: #58a6ff;
-            box-shadow: 0 0 0 3px rgba(88,166,255,.15);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-shadow);
         }
         textarea { resize: vertical; min-height: 100px; }
         select { cursor: pointer; appearance: auto; }
@@ -144,8 +208,8 @@ $responseJson = json_encode([
         .tab-btn {
             padding: .4rem .85rem;
             background: transparent;
-            border: 1px solid #30363d;
-            color: #8b949e;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             cursor: pointer;
             font-size: .75rem;
             font-weight: 600;
@@ -154,8 +218,8 @@ $responseJson = json_encode([
         .tab-btn:first-child { border-radius: 6px 0 0 6px; }
         .tab-btn:last-child { border-radius: 0 6px 6px 0; }
         .tab-btn.active {
-            background: #58a6ff;
-            border-color: #58a6ff;
+            background: var(--accent);
+            border-color: var(--accent);
             color: #fff;
         }
         .tab-content { display: none; }
@@ -165,8 +229,8 @@ $responseJson = json_encode([
         .kv-row input { flex: 1; }
         .btn-icon {
             background: none;
-            border: 1px solid #30363d;
-            color: #8b949e;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             width: 32px;
             height: 32px;
             border-radius: 6px;
@@ -178,14 +242,14 @@ $responseJson = json_encode([
             flex-shrink: 0;
             transition: all .15s;
         }
-        .btn-icon:hover { border-color: #58a6ff; color: #58a6ff; }
-        .btn-icon.danger { border-color: #da3633; color: #da3633; }
-        .btn-icon.danger:hover { background: #da3633; color: #fff; }
+        .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-icon.danger { border-color: var(--danger); color: var(--danger); }
+        .btn-icon.danger:hover { background: var(--danger); color: #fff; }
 
         .btn-add-kv {
             background: transparent;
-            border: 1px dashed #30363d;
-            color: #8b949e;
+            border: 1px dashed var(--border);
+            color: var(--text-secondary);
             padding: .4rem .75rem;
             border-radius: 6px;
             cursor: pointer;
@@ -193,10 +257,10 @@ $responseJson = json_encode([
             width: 100%;
             transition: all .15s;
         }
-        .btn-add-kv:hover { border-color: #58a6ff; color: #58a6ff; }
+        .btn-add-kv:hover { border-color: var(--accent); color: var(--accent); }
 
         .btn-submit {
-            background: #238636;
+            background: var(--green);
             border: none;
             color: #fff;
             padding: .6rem 1.5rem;
@@ -209,12 +273,12 @@ $responseJson = json_encode([
             align-items: center;
             gap: .5rem;
         }
-        .btn-submit:hover { background: #2ea043; }
+        .btn-submit:hover { background: var(--green-hover); }
 
         .btn-add-form {
-            background: #21262d;
-            border: 1px solid #30363d;
-            color: #58a6ff;
+            background: var(--bg-btn-secondary);
+            border: 1px solid var(--border);
+            color: var(--accent);
             padding: .55rem 1.2rem;
             border-radius: 6px;
             font-size: .85rem;
@@ -225,7 +289,24 @@ $responseJson = json_encode([
             align-items: center;
             gap: .4rem;
         }
-        .btn-add-form:hover { background: #30363d; }
+        .btn-add-form:hover { background: var(--border); }
+
+        /* Theme toggle */
+        .btn-theme {
+            background: var(--bg-btn-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .2s;
+        }
+        .btn-theme:hover { border-color: var(--accent); color: var(--accent); }
 
         .actions-row {
             display: flex;
@@ -242,7 +323,7 @@ $responseJson = json_encode([
             justify-content: space-between;
             margin-bottom: .5rem;
         }
-        .response-header h3 { font-size: .9rem; color: #e1e4e8; }
+        .response-header h3 { font-size: .9rem; color: var(--text-primary); }
         .status-badge {
             padding: .2rem .6rem;
             border-radius: 20px;
@@ -250,15 +331,15 @@ $responseJson = json_encode([
             font-weight: 700;
             font-family: monospace;
         }
-        .status-2xx { background: rgba(35,134,54,.25); color: #3fb950; }
-        .status-3xx { background: rgba(88,166,255,.2); color: #58a6ff; }
-        .status-4xx { background: rgba(218,54,51,.2); color: #f85149; }
-        .status-5xx { background: rgba(218,54,51,.35); color: #ff7b72; }
-        .status-err { background: rgba(218,54,51,.35); color: #ff7b72; }
+        .status-2xx { background: var(--status-2xx-bg); color: var(--status-2xx-fg); }
+        .status-3xx { background: var(--status-3xx-bg); color: var(--status-3xx-fg); }
+        .status-4xx { background: var(--status-4xx-bg); color: var(--status-4xx-fg); }
+        .status-5xx { background: var(--status-5xx-bg); color: var(--status-5xx-fg); }
+        .status-err { background: var(--status-5xx-bg); color: var(--status-5xx-fg); }
 
         pre.response-body {
-            background: #0d1117;
-            border: 1px solid #30363d;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
             border-radius: 6px;
             padding: .75rem;
             overflow-x: auto;
@@ -268,12 +349,13 @@ $responseJson = json_encode([
             overflow-y: auto;
             white-space: pre-wrap;
             word-break: break-word;
+            transition: background .2s, border-color .2s;
         }
 
         .response-iframe {
             width: 100%;
             min-height: 400px;
-            border: 1px solid #30363d;
+            border: 1px solid var(--border);
             border-radius: 6px;
             background: #fff;
         }
@@ -286,8 +368,8 @@ $responseJson = json_encode([
         .response-toggle button {
             padding: .35rem .75rem;
             background: transparent;
-            border: 1px solid #30363d;
-            color: #8b949e;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             cursor: pointer;
             font-size: .7rem;
             font-weight: 600;
@@ -296,29 +378,29 @@ $responseJson = json_encode([
         .response-toggle button:first-child { border-radius: 6px 0 0 6px; }
         .response-toggle button:last-child { border-radius: 0 6px 6px 0; }
         .response-toggle button.active {
-            background: #58a6ff;
-            border-color: #58a6ff;
+            background: var(--accent);
+            border-color: var(--accent);
             color: #fff;
         }
 
         .divider {
             border: none;
-            border-top: 1px solid #21262d;
+            border-top: 1px solid var(--border-divider);
             margin: 0;
         }
 
         /* JSON syntax highlighting */
-        .json-key { color: #79c0ff; }
-        .json-string { color: #a5d6ff; }
-        .json-number { color: #f0883e; }
-        .json-boolean { color: #ff7b72; }
-        .json-null { color: #8b949e; font-style: italic; }
+        .json-key { color: var(--json-key); }
+        .json-string { color: var(--json-string); }
+        .json-number { color: var(--json-number); }
+        .json-boolean { color: var(--json-boolean); }
+        .json-null { color: var(--json-null); font-style: italic; }
 
         /* Fullscreen button */
         .btn-fullscreen {
             background: none;
-            border: 1px solid #30363d;
-            color: #8b949e;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
             width: 28px;
             height: 28px;
             border-radius: 6px;
@@ -330,7 +412,7 @@ $responseJson = json_encode([
             transition: all .15s;
             margin-left: .5rem;
         }
-        .btn-fullscreen:hover { border-color: #58a6ff; color: #58a6ff; }
+        .btn-fullscreen:hover { border-color: var(--accent); color: var(--accent); }
 
         /* Fullscreen modal overlay */
         .fullscreen-overlay {
@@ -338,9 +420,10 @@ $responseJson = json_encode([
             position: fixed;
             inset: 0;
             z-index: 9999;
-            background: #0d1117;
+            background: var(--bg-body);
             padding: 0;
             flex-direction: column;
+            transition: background .2s;
         }
         .fullscreen-overlay.open { display: flex; }
         .fullscreen-toolbar {
@@ -348,13 +431,14 @@ $responseJson = json_encode([
             align-items: center;
             justify-content: space-between;
             padding: .75rem 1.25rem;
-            background: #161b22;
-            border-bottom: 1px solid #30363d;
+            background: var(--fs-toolbar-bg);
+            border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            transition: background .2s, border-color .2s;
         }
         .fullscreen-toolbar h3 {
             font-size: 1rem;
-            color: #e1e4e8;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: .5rem;
@@ -362,9 +446,9 @@ $responseJson = json_encode([
         .fullscreen-toolbar .status-badge { font-size: .8rem; }
         .fullscreen-actions { display: flex; gap: .5rem; align-items: center; }
         .btn-close-fullscreen {
-            background: #21262d;
-            border: 1px solid #30363d;
-            color: #e1e4e8;
+            background: var(--bg-btn-secondary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             padding: .4rem 1rem;
             border-radius: 6px;
             cursor: pointer;
@@ -372,7 +456,7 @@ $responseJson = json_encode([
             font-weight: 600;
             transition: all .15s;
         }
-        .btn-close-fullscreen:hover { background: #30363d; }
+        .btn-close-fullscreen:hover { background: var(--border); }
         .fullscreen-body {
             flex: 1;
             overflow: auto;
@@ -389,7 +473,7 @@ $responseJson = json_encode([
             word-break: break-word;
             max-height: none;
             overflow: visible;
-            color: #e1e4e8;
+            color: var(--text-primary);
         }
         .fullscreen-body iframe {
             width: 100%;
@@ -404,7 +488,10 @@ $responseJson = json_encode([
 <div class="container">
     <div class="top-bar">
         <h1><span>⚡</span> Internal API Tester</h1>
-        <button class="btn-add-form" onclick="addForm(); return false;">+ Add Request</button>
+        <div class="top-bar-right">
+            <button class="btn-add-form" onclick="addForm(); return false;">+ Add Request</button>
+            <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
+        </div>
     </div>
     <div id="forms-container"></div>
 </div>
@@ -428,6 +515,21 @@ $responseJson = json_encode([
 </div>
 
 <script>
+    // --- Theme ---
+    const THEME_KEY = 'api_tester_theme';
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const btn = document.getElementById('themeToggle');
+        if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+        localStorage.setItem(THEME_KEY, theme);
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+    // Apply saved theme immediately (before DOM renders)
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+
     let formCounter = 0;
     const STORAGE_KEY = 'api_tester_forms';
     const serverResponse = <?= $responseJson ?>;

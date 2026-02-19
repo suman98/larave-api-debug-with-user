@@ -1,0 +1,9 @@
+{
+    "name": "suman98/larave-api-debug-with-user",
+    "description": "Internal API tester/debugger with user authentication",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
