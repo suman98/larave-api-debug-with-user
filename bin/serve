@@ -1,0 +1,40 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Laravel API Debug — Development Server
+ *
+ * Usage:
+ *   php bin/serve [host] [port]
+ *
+ * Defaults:
+ *   host = localhost
+ *   port = 8089
+ */
+
+$host = $argv[1] ?? 'localhost';
+$port = $argv[2] ?? '8089';
+
+// Resolve the public directory relative to this script
+$publicDir = realpath(__DIR__ . '/../public');
+
+if (!$publicDir || !is_dir($publicDir)) {
+    fwrite(STDERR, "Error: public/ directory not found.\n");
+    exit(1);
+}
+
+echo "\n";
+echo "  ⚡ Laravel API Debug with User\n";
+echo "  ────────────────────────────────────\n";
+echo "  Server:  http://{$host}:{$port}\n";
+echo "  DocRoot: {$publicDir}\n";
+echo "  ────────────────────────────────────\n";
+echo "  Press Ctrl+C to stop.\n\n";
+
+$exitCode = 0;
+passthru(
+    sprintf('php -S %s:%s -t %s', $host, $port, escapeshellarg($publicDir)),
+    $exitCode
+);
+
+exit($exitCode);

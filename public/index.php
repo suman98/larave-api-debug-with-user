@@ -1,6 +1,28 @@
 <?php
 
-require './load-laravel.php';
+// --- Find Composer autoloader ---
+$autoloaderPaths = [
+    __DIR__ . '/../vendor/autoload.php',   // Standalone (cloned repo)
+    __DIR__ . '/../../../autoload.php',     // Installed as Composer dependency
+];
+
+$autoloaded = false;
+foreach ($autoloaderPaths as $path) {
+    if (file_exists($path)) {
+        require_once $path;
+        $autoloaded = true;
+        break;
+    }
+}
+
+if (!$autoloaded) {
+    die('Composer autoloader not found. Run <code>composer install</code> first.');
+}
+
+use Suman98\LaravelApiDebug\Bootstrap;
+use Suman98\LaravelApiDebug\InternalApiCaller;
+
+Bootstrap::init();
 
 // --- Handle form submission ---
 $submittedIndex = null;

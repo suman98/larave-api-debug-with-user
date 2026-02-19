@@ -1,9 +1,35 @@
 {
-    "name": "suman98/larave-api-debug-with-user",
-    "description": "Internal API tester/debugger with user authentication",
+    "name": "suman98/laravel-api-debug-with-user",
+    "description": "A standalone web UI to test internal Laravel API routes as any authenticated user.",
     "type": "project",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "api",
+        "debug",
+        "tester",
+        "internal-api"
+    ],
+    "authors": [
+        {
+            "name": "Suman",
+            "homepage": "https://github.com/suman98"
+        }
+    ],
     "require": {
         "php": ">=7.4",
         "vlucas/phpdotenv": "^5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Suman98\\LaravelApiDebug\\": "src/"
+        }
+    },
+    "bin": [
+        "bin/serve"
+    ],
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true
     }
 }

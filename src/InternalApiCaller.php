@@ -1,10 +1,11 @@
 <?php
 
+namespace Suman98\LaravelApiDebug;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
-use Gec\Users\Models\User;
 
 class InternalApiCaller
 {
@@ -40,10 +41,10 @@ class InternalApiCaller
      */
     private function makeCall(string $uri, $user = null, array $payload = [], string $method = 'GET'): Response
     {
-
-        // Find user if an ID is passed
-        if (is_int($user)) {
-            $user = User::findOrFail($user);
+        // Find user if an ID is passed — resolve model from Laravel auth config
+        if (is_int($user) || (is_string($user) && ctype_digit($user))) {
+            $userModel = config('auth.providers.users.model', 'App\\Models\\User');
+            $user = $userModel::findOrFail((int) $user);
         }
 
         // Authenticate the user
